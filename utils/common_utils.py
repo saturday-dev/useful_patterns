@@ -7,6 +7,7 @@ import importlib
 from typing import Any, Union
 import logging
 from logging import Logger
+from rich.logging import RichHandler
 from time import time
 
 def getTimer(func):
@@ -80,21 +81,34 @@ def getLogger(logPath: str =os.getcwd(), loggerName: str = 'main') -> Logger :
     Returns:
         Logger: _description_
     """
-    # Logger 설정
+    # 1. Logger 설정
     logger = logging.getLogger(loggerName)  # 로거 이름 지정
     logger.setLevel(logging.DEBUG)           # 로거 레벨 설정 (INFO, WARNING 포함)
 
-    # 로그 포맷 설정
+    # 2. 로그 포맷 설정
     formatter = logging.Formatter(
         "%(asctime)s - %(levelname)s - %(message)s "
         "[File: %(pathname)s, Line: %(lineno)d]",  # 파일 경로와 라인 번호 포함
         datefmt="%Y-%m-%d %H:%M:%S"
     )
 
-    # 콘솔 핸들러 생성
-    console_handler = logging.StreamHandler()
-    console_handler.setFormatter(formatter)
-    logger.addHandler(console_handler)
+    # 3. 콘솔 핸들러 생성
+    rich_handler = RichHandler(
+        # 파일명과 라인 번호 표시 (RichHandler의 기본 설정)
+        show_path=True, 
+        # 시간 형식 지정 (RichHandler는 자체적으로 시간을 보기 좋게 포맷합니다)
+        rich_tracebacks=True, # 예외 발생 시 트레이스백을 Rich로 예쁘게 출력
+        tracebacks_show_locals=False, # 필요시 로컬 변수 출력 설정
+        # log_time_format="%Y-%m-%d %H:%M:%S", # Rich 스타일 시간 포맷
+        
+        # 터미널에서 DEBUG 레벨까지 출력되도록 설정
+        level=logging.DEBUG 
+    )
+    # RichHandler는 기본적으로 매우 잘 포맷되므로 별도의 setFormatter 호출이 필요 없습니다.
+    # 만약 특정 포맷을 적용하려면 다음과 같이 설정할 수 있습니다:
+    # rich_handler.setFormatter(file_formatter) 
+    
+    logger.addHandler(rich_handler)
     
     # 파일 핸들러 생성
     if os.path.isfile(logPath):
